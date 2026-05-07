@@ -1,0 +1,7 @@
+{
+    "fsdp_transformer_layer_cls_to_wrap": "LlamaDecoderLayer",
+    "fsdp_use_orig_params": true,
+    "fsdp_cpu_ram_efficient_loading": true,
+    "fsdp_sync_module_states": true,
+    "fsdp_state_dict_type": "SHARDED_STATE_DICT"
+}

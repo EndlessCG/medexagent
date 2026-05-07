@@ -1,0 +1,41 @@
+# Core data and config
+PyYAML==6.0.3
+pandas==2.3.3
+pyarrow==23.0.0
+numpy==2.4.2
+tqdm==4.67.3
+
+# LLM APIs and tracing
+openai==2.6.1
+aiohttp==3.13.3
+weave==0.52.26
+wandb==0.25.0
+
+# Model training and local inference
+torch==2.9.1
+transformers==4.57.1
+accelerate==1.12.0
+peft==0.18.1
+datasets==4.5.0
+safetensors==0.7.0
+sentencepiece==0.2.1
+
+# Embedding-based diagnosis scoring
+sentence-transformers==5.2.2
+scipy==1.17.0
+scikit-learn==1.8.0
+
+# RL training stack
+verl==0.7.0
+ray==2.53.0
+sglang==0.5.8.post1
+hydra-core==1.3.2
+omegaconf==2.3.0
+
+# Serving / API utilities
+fastapi==0.128.0
+uvicorn==0.40.0
+httpx==0.28.1
+
+# Optional acceleration; install only if your CUDA/PyTorch build is compatible.
+# flash-attn==2.8.3

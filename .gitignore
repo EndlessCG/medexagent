@@ -2,13 +2,11 @@
 .vscode
 __pycache__
 *.log
-*.json
 *.jsonl
 *.csv
 *.tsv
 *.pkl
 *.xlsx
-*.txt
 *.pdf
 wandb/
 data/database/umls/
