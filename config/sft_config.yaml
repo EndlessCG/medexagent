@@ -1,0 +1,72 @@
+# Stage 1: Supervised Fine-Tuning Configuration
+model_name: OpenMeditron/Meditron3-8B
+data_path: data/conversations/processed/sft_mix.jsonl
+
+# Training
+num_epochs: 1
+batch_size: 2
+gradient_accumulation: 2
+learning_rate: 2.0e-5
+lr_scheduler: cosine
+warmup_ratio: 0.05
+gradient_checkpointing: true
+
+# Attention
+attn_implementation: sdpa
+
+# LoRA
+use_lora: false
+# lora_r: 64
+# lora_alpha: 128
+# lora_dropout: 0.05
+
+# FSDP
+# fsdp: "full_shard auto_wrap"
+# fsdp_config: config/fsdp_config.json
+
+# Checkpointing
+output_dir: <YOUR_CHECKPOINT_PATH>
+save_steps: 99999999999
+save_total_limit: 3
+top_k_checkpoints: 2
+best_checkpoint_metrics:
+  - diagnosis_reward
+  - tool_call_reward
+  - conv_diagnosis_reward
+  - conv_tool_call_reward
+
+# Logging
+report_to: wandb
+run_name: medagent-sft
+wandb_project: medagent-sft
+logging_steps: 1
+dataloader_num_workers: 4
+
+# Periodic evaluation (optional)
+# Requires JSONL conversation files (same format as data_path).
+eval_data_paths:
+  ddxplus: data/conversations/processed/ddxplus_val_conversations_clean.jsonl
+  pmc: data/conversations/processed/pmc_val_conversations_clean.jsonl
+eval_async: true
+eval_async_gpu: 5
+eval_steps: 250                  # run eval every N steps
+eval_before_train: false
+eval_output_dir: logs/eval_output/
+max_eval_diag_samples: 50        # max diagnosis samples per run
+max_eval_tool_samples: 100       # max tool-call samples per run
+eval_max_new_tokens: 1024
+eval_random_sample: true
+eval_debug_generate_heartbeat: true
+judge_base_url: https://api.openai.com/v1
+judge_model_name: gpt-4.1-mini
+patient_base_url: https://api.openai.com/v1
+patient_model_name: gpt-4o-mini
+
+# Enable/disable individual eval types
+eval_diagnosis: true
+eval_tool_call: true
+eval_conversation: true
+
+# Per-type sample limits
+max_eval_conv_samples: 10
+max_eval_conv_turns: 15

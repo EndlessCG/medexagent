@@ -1,0 +1,84 @@
+# Stage 2: DAPO-based RL Configuration
+
+model_path: <YOUR_CHECKPOINT_PATH>
+tokenizer_path: <YOUR_CHECKPOINT_PATH>
+
+data_path: data/conversations/processed/rl_mix.csv
+# New parquet path — noise assignments are baked into extra_info, so the parquet
+# must be rebuilt (do NOT reuse a parquet from a no-noise run).
+parquet_path: data/rl_dataset.parquet
+
+# Noise injection during rollouts
+patient_noise_level: 0.3
+exam_noise_level: 0.1
+noise_seed: 42
+
+# Set disable_eval=true to skip all validation (val_before_train=False, test_freq=-1)
+disable_eval: true
+eval_data_paths:
+  ddxplus: data/conversations/processed/ddxplus_val_conversations_clean.jsonl
+  pmc: data/conversations/processed/pmc_val_conversations_clean.jsonl
+eval_parquet_path: data/rl_eval_dataset.parquet
+max_eval_diag_samples: 200
+max_eval_tool_samples: 200
+max_eval_conv_samples: 20
+eval_steps: 10
+eval_max_new_tokens: 2048
+eval_max_turns: 20
+
+# Reward weights: R = w_diagnosis * R_dx + w_tool_match * R_tool - w_cost * R_cost
+w_diagnosis: 1.0
+w_tool_match: 0.5
+w_cost: 0.1
+w_format: 0.0
+
+diagnosis_method: llm_judge
+diagnosis_judge_model: gpt-4.1-mini
+
+# DAPO parameters
+clip_ratio_low: 0.2
+clip_ratio_high: 0.3
+kl_coef: 0.0
+entropy_coeff: 0.002
+
+# Rollout
+group_size: 16
+temperature: 1.0
+max_prompt_length: 4096
+max_response_length: 16384
+rollout_engine: sglang
+
+# Multi-turn agent loop
+multi_turn:
+  max_user_turns: 15
+  max_assistant_turns: 20
+  format: hermes
+  interaction_config_path: config/interaction_config_rl.yaml
+
+# Hardware
+n_gpus_per_node: 2
+
+# Training
+total_epochs: 1
+learning_rate: 1.0e-6
+batch_size: 64
+ppo_micro_batch_size_per_gpu: 4
+log_prob_micro_batch_size_per_gpu: 2
+
+# Logging
+wandb_project: medagent-rl
+run_name: medagent-rl
+weave_project: medagent-rl
+weave_trace: true
+weave_trace_backend: weave
+weave_trace_token2text: true
+weave_trace_max_samples_per_step_per_worker: 1
+weave_trace_every_n_steps: 10
+weave_trace_force_async_rollout: true
+weave_eval_traces: true
+
+# Output
+output_dir: <YOUR_CHECKPOINT_PATH>
+save_steps: 200
+
+top_k_checkpoints: 2
