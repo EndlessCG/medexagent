@@ -1,6 +1,6 @@
 # MedExAgent
 
-This is the official repository for NeurIPS 2026 submission: "MedExAgent: Training LLM Agents to Ask, Examine, and Diagnose in Noisy Clinical Environments". 
+This is the official repository for "MedExAgent: Training LLM Agents to Ask, Examine, and Diagnose in Noisy Clinical Environments". 
 
 ## Setup
 
