@@ -23,6 +23,20 @@ export WANDB_API_KEY=... # optional, for wandb logging
 
 Most commands accept `--base-url` or `--api-base-url`, so local vLLM/SGLang/OpenAI-compatible servers can be used instead of `https://api.openai.com/v1`.
 
+## Model Checkpoint
+
+The released 8B model checkpoint is hosted on Hugging Face:
+
+- https://huggingface.co/medagent/MedExAgent-8B
+
+The model repository is gated for research-use acknowledgement. It is not intended for clinical use.
+
+After access is granted, you can chat with the model locally:
+
+```bash
+python chat.py --hf-model medagent/MedExAgent-8B
+```
+
 
 ## Data Generation
 
