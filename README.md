@@ -2,6 +2,22 @@
 
 This is the official repository for "MedExAgent: Training LLM Agents to Ask, Examine, and Diagnose in Noisy Clinical Environments". 
 
+Paper: https://arxiv.org/abs/2605.07058
+
+## Citation
+
+```bibtex
+@misc{gao2026medexagenttrainingllmagents,
+      title={MedExAgent: Training LLM Agents to Ask, Examine, and Diagnose in Noisy Clinical Environments}, 
+      author={Yicheng Gao and Xiaolin Zhou and Yahan Li and Yue Zhao and Ruishan Liu},
+      year={2026},
+      eprint={2605.07058},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2605.07058}, 
+}
+```
+
 ## Setup
 
 First, install dependencies in a virtual environment (Python 3.11 recommended):
