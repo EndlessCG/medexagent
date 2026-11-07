@@ -53,6 +53,13 @@ After access is granted, you can chat with the model locally:
 python chat.py --hf-model medagent/MedExAgent-8B
 ```
 
+## Released Data
+
+The data used to train and evaluate MedExAgent-8B is hosted on Hugging Face:
+
+- https://huggingface.co/datasets/medagent/MedExAgent-Data
+
+It contains the SFT conversations (`sft/train.jsonl`), the RL patient tables (`rl/train_patients.csv`, and `rl/train_verl.parquet` in the verl format), and the validation and test splits for DDxPlus and PMC-Patients-v2 (`eval/`). The dataset is gated for research-use acknowledgement and licensed under CC BY-NC-SA 4.0.
 
 ## Data Generation
 
