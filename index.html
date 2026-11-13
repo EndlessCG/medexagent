@@ -1,0 +1,727 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MedExAgent</title>
+<meta name="description" content="MedExAgent (NeurIPS 2026): a POMDP environment for interactive clinical diagnosis with noisy observations and exam costs, and an 8B agent trained with SFT and DAPO.">
+<meta name="citation_title" content="MedExAgent: Training LLM Agents to Ask, Examine, and Diagnose in Noisy Clinical Environments">
+<meta name="citation_author" content="Gao, Yicheng">
+<meta name="citation_author" content="Zhou, Xiaolin">
+<meta name="citation_author" content="Li, Yahan">
+<meta name="citation_author" content="Zhao, Yue">
+<meta name="citation_author" content="Liu, Ruishan">
+<meta name="citation_conference_title" content="NeurIPS 2026">
+<meta name="citation_publication_date" content="2026">
+<meta name="citation_pdf_url" content="https://endlesscg.github.io/medexagent/static/MedExAgent_NeurIPS2026.pdf">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#F5F8F9;
+  --surface:#FFFFFF;
+  --surface-2:#EDF2F4;
+  --plate:#FFFFFF;
+  --plate-edge:#D3DCE2;
+  --ink:#13202A;
+  --muted:#52616D;
+  --rule:#D3DCE2;
+  --rule-strong:#9AA9B4;
+  --accent:#1B6B4D;
+  --on-accent:#FFFFFF;
+  --accent-wash:#E6F2EC;
+  --noise:#AE3434;
+  --noise-wash:#FBEDEC;
+  --todo:#8A5A00;
+  --todo-wash:#FFF5DB;
+  --pip-off:#C9D3DA;
+  --focus:#1B6B4D;
+  color-scheme: light;
+  --font-display:"Newsreader","IBM Plex Sans","Iowan Old Style",Charter,"Source Serif Pro",Georgia,serif;
+  --font-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --font-mono:"IBM Plex Mono","IBM Plex Sans",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1418; --surface:#151D23; --surface-2:#1A242B;
+    --plate:#E8EDF0; --plate-edge:#3E4D58;
+    --ink:#E3EAEE; --muted:#9AA9B4;
+    --rule:#25313A; --rule-strong:#3E4D58;
+    --accent:#62C39C; --on-accent:#0E1418; --accent-wash:#16302A;
+    --noise:#F08A84; --noise-wash:#33201F;
+    --todo:#E9B44C; --todo-wash:#33290F;
+    --pip-off:#34424C; --focus:#62C39C;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1418; --surface:#151D23; --surface-2:#1A242B;
+  --plate:#E8EDF0; --plate-edge:#3E4D58;
+  --ink:#E3EAEE; --muted:#9AA9B4;
+  --rule:#25313A; --rule-strong:#3E4D58;
+  --accent:#62C39C; --on-accent:#0E1418; --accent-wash:#16302A;
+  --noise:#F08A84; --noise-wash:#33201F;
+  --todo:#E9B44C; --todo-wash:#33290F;
+  --pip-off:#34424C; --focus:#62C39C;
+  color-scheme: dark;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+@media (prefers-reduced-motion: no-preference){ html{scroll-behavior:smooth} }
+@media (prefers-reduced-motion: reduce){ *{transition:none!important} }
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:var(--font-body); font-size:1.0625rem; line-height:1.65; font-weight:400;
+  -webkit-text-size-adjust:100%; text-size-adjust:100%;
+}
+img{max-width:100%}
+a{color:var(--accent); text-decoration-thickness:1px; text-underline-offset:2px; transition:color 120ms, border-color 120ms, background-color 120ms}
+a:hover{color:var(--ink)}
+:focus-visible{outline:2px solid var(--focus); outline-offset:2px}
+p{margin:0}
+h1,h2,h3{margin:0; color:var(--ink)}
+code{font-family:var(--font-mono); font-size:.86em; overflow-wrap:anywhere}
+sub,sup{line-height:0}
+strong{font-weight:600}
+.vh{position:absolute!important; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap}
+.mono{font-family:var(--font-mono)}
+.num{font-family:var(--font-display); font-weight:500; font-variant-numeric:lining-nums tabular-nums}
+
+.skip{position:absolute; left:-9999px; top:0; background:var(--ink); color:var(--bg); padding:.5rem .8rem; z-index:10; font-weight:500}
+.skip:focus{left:1rem; top:1rem}
+
+/* ---------- placeholders ---------- */
+.todo{
+  font-family:var(--font-mono); font-size:.8rem; line-height:1.4;
+  border:1px dashed var(--todo); background:var(--todo-wash); color:var(--todo);
+  padding:.1rem .4rem; border-radius:2px;
+}
+
+/* ---------- page wrapper ---------- */
+.page{
+  max-width:72rem; margin-inline:auto;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));
+  padding-right:max(16px, env(safe-area-inset-right, 0px));
+  padding-block:1.25rem 3rem;
+}
+.page > *{min-width:0}
+
+/* ---------- top bar ---------- */
+.topbar{display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:.5rem 1.5rem; padding-bottom:1rem; border-bottom:1px solid var(--rule)}
+.wordmark{font-family:var(--font-mono); font-weight:500; font-size:.9rem; letter-spacing:.02em; color:var(--ink); text-decoration:none}
+.topnav{display:flex; align-items:center; gap:.5rem 1.25rem; flex-wrap:wrap; min-width:0}
+.theme{display:inline-flex; border:1px solid var(--rule-strong); border-radius:3px}
+.theme button{
+  font-family:var(--font-mono); font-size:.7rem; letter-spacing:.06em; text-transform:uppercase;
+  background:transparent; color:var(--muted); border:0; padding:.35rem .55rem; min-height:32px; cursor:pointer;
+  transition:color 120ms, background-color 120ms;
+}
+.theme button + button{border-left:1px solid var(--rule-strong)}
+.theme button[aria-pressed="true"]{background:var(--ink); color:var(--bg)}
+.theme button:hover{color:var(--accent)}
+.theme button[aria-pressed="true"]:hover{color:var(--bg)}
+@media (max-width:639px){
+  .topnav{width:100%}
+}
+
+/* ---------- section grid ---------- */
+.sec{border-top:1px solid var(--rule); padding-block:2.75rem}
+.sec > *{min-width:0}
+.sec > p, .sec > ul, .sec > ol{max-width:85ch}
+.sec > * + *{margin-top:1.1rem}
+.sec > .wide{margin-top:2rem}
+.sec > .wide + .wide{margin-top:2.5rem}
+.sec > .wide{max-width:none}
+.sec > h3, .sec > .wide + :not(.wide){margin-top:2.25rem}
+.sec > .wide + .note{margin-top:2.25rem}
+.kicker{
+  font-family:var(--font-mono); font-size:.75rem; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--muted); line-height:1.5; font-weight:400;
+}
+.sec h2{font-family:var(--font-display); font-optical-sizing:auto; font-weight:500; font-size:1.75rem; line-height:1.2; letter-spacing:-.005em}
+.sec h3{font-family:var(--font-display); font-optical-sizing:auto; font-weight:600; font-size:1.2rem; line-height:1.3}
+.note{
+  font-size:.9rem; line-height:1.55; color:var(--muted);
+  border-top:1px solid var(--rule); padding-top:.6rem;
+}
+.note .kicker{display:block; margin-bottom:.25rem}
+.note strong{color:var(--ink)}
+
+@media (min-width:960px){
+  .sec{padding-block:4rem}
+}
+
+/* ---------- hero ---------- */
+.hero{padding-block:2.5rem 2.25rem; display:grid; gap:2rem}
+.hero > *{min-width:0}
+.venue{display:flex; flex-wrap:wrap; gap:.25rem 1.25rem; font-family:var(--font-mono); font-size:.75rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted)}
+.venue a{color:var(--muted)}
+.venue a:hover{color:var(--accent)}
+h1{margin-top:1rem; font-family:var(--font-display); font-optical-sizing:auto; overflow-wrap:break-word}
+h1 .name{display:block; font-weight:600; letter-spacing:-.015em; font-size:clamp(2.6rem, 1rem + 6vw, 4.4rem); line-height:1.02}
+h1 .subtitle{display:block; margin-top:.6rem; font-weight:400; font-size:clamp(1.25rem, .8rem + 1.6vw, 1.7rem); line-height:1.2}
+.authors{margin-top:1.4rem; font-size:1.05rem; font-weight:500; line-height:1.5}
+.authors span{white-space:nowrap}
+.affil{margin-top:.45rem}
+.tldr{margin-top:1.6rem}
+.tldr .label{font-family:var(--font-mono); font-size:.75rem; letter-spacing:.08em; color:var(--accent); font-weight:500; display:block; margin-bottom:.25rem}
+.tldr p{font-family:var(--font-display); font-optical-sizing:auto; font-size:1.3rem; line-height:1.45}
+.buttons{display:flex; flex-wrap:wrap; gap:.5rem; margin-top:1.6rem; padding:0; list-style:none}
+.btn{
+  display:inline-flex; align-items:center; gap:.45rem; min-height:44px; padding:.5rem .85rem;
+  border:1px solid var(--rule-strong); border-radius:3px; background:var(--surface); color:var(--ink);
+  font-family:var(--font-body); font-weight:500; font-size:.92rem; line-height:1.2; text-decoration:none;
+  transition:color 120ms, border-color 120ms, background-color 120ms; cursor:pointer;
+}
+.btn svg{width:16px; height:16px; flex:none}
+a.btn:hover, button.btn:hover{border-color:var(--accent); color:var(--accent)}
+.btn.primary{background:var(--ink); color:var(--bg); border-color:var(--ink)}
+.btn.primary:hover{background:var(--accent); color:var(--on-accent); border-color:var(--accent)}
+.btn.todo{border:1px dashed var(--todo); background:var(--todo-wash); color:var(--todo); font-family:var(--font-body); font-size:.92rem; padding:.5rem .85rem}
+a.btn.todo:hover{color:var(--todo); border-color:var(--todo); text-decoration:underline}
+span.btn.todo{cursor:default}
+.stamp{font-family:var(--font-mono); font-size:.68rem; letter-spacing:.06em; text-transform:uppercase; border-left:1px dashed var(--todo); padding-left:.45rem}
+
+
+/* ---------- disclaimer ---------- */
+.disclaimer{border-top:1px solid var(--rule-strong); border-bottom:1px solid var(--rule-strong); padding-block:1rem; display:grid; gap:.3rem}
+.disclaimer p{font-weight:500}
+@media (min-width:960px){
+  .disclaimer{display:flex; column-gap:1.25rem; align-items:baseline}
+  .disclaimer p{white-space:nowrap}
+}
+
+/* ---------- figures ---------- */
+figure{margin:0}
+.plate{background:var(--plate); border:1px solid var(--plate-edge); padding:clamp(8px,1.5vw,16px); border-radius:3px}
+.plate img{display:block; width:100%; height:auto; margin-inline:auto}
+.plate > a{display:block}
+.fullsize{display:none}
+@media (max-width:719px){ .fullsize{display:inline} }
+.fig-teaser{margin-top:2rem}
+figcaption.cap{margin-top:.75rem; font-size:.9rem; line-height:1.5; color:var(--muted)}
+.cap .figlabel{font-family:var(--font-mono); font-size:.75rem; letter-spacing:.08em; color:var(--muted); margin-right:.5rem}
+.cap strong{color:var(--ink); font-weight:600}
+
+/* ---------- lists / why ---------- */
+.three{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%,14rem),1fr)); gap:1.5rem 2rem; margin:0; padding:0; list-style:none}
+.three > *{min-width:0; border-top:1px solid var(--rule-strong); padding-top:.7rem}
+.three h3{margin-bottom:.35rem}
+.three p{font-size:.97rem; line-height:1.6}
+.contribs{padding-left:1.6rem; margin:0}
+.contribs li{padding-left:.4rem}
+.contribs li + li{margin-top:.8rem}
+.contribs li::marker{font-family:var(--font-mono); font-size:.85rem; color:var(--muted)}
+
+/* ---------- episode trace (signature) ---------- */
+.episode{border:1px solid var(--rule-strong); border-radius:3px; background:var(--surface)}
+.ep-head{background:var(--surface-2); border-bottom:1px solid var(--rule); padding:.8rem 1rem; display:flex; flex-wrap:wrap; align-items:baseline; gap:.35rem 1.25rem; font-size:.9rem; line-height:1.5; color:var(--ink)}
+.ep-head .kicker{color:var(--muted)}
+.latent{display:inline-flex; align-items:center; gap:.5rem; color:var(--muted)}
+.latent-chip{font-family:var(--font-display); font-style:italic; font-size:1rem; color:var(--ink); border:1px dotted var(--rule-strong); border-radius:2px; padding:0 .45rem; line-height:1.5}
+.turns{list-style:none; margin:0; padding:.6rem 1rem .4rem; position:relative}
+.turns::before{content:""; position:absolute; left:calc(1rem + 3rem + .375rem); top:1.1rem; bottom:1.1rem; width:1px; background:var(--rule)}
+.turn{display:grid; grid-template-columns:3rem auto minmax(0,1fr); gap:.75rem; padding-block:.7rem; align-items:start; position:relative}
+.turn + .turn{border-top:1px solid var(--rule)}
+.turn .t{font-family:var(--font-mono); font-size:.78rem; color:var(--muted); padding-top:.2rem; font-variant-numeric:tabular-nums}
+.chip{
+  display:inline-flex; align-items:center; gap:.35rem; min-width:4.9rem;
+  font-family:var(--font-mono); font-weight:500; font-size:.7rem; letter-spacing:.06em; text-transform:uppercase; line-height:1;
+  border:1px solid var(--accent); color:var(--accent); background:var(--surface); border-radius:2px; padding:.32rem .45rem;
+  position:relative; z-index:1;
+}
+.chip svg{width:12px; height:12px; flex:none}
+.chip.dx{background:var(--accent); color:var(--on-accent)}
+.turn-body{min-width:0}
+.act{font-size:1rem; line-height:1.5}
+.act code, .tc{font-family:var(--font-mono); font-size:.8rem; background:var(--surface-2); padding:.1rem .35rem; border-radius:2px; overflow-wrap:anywhere; line-height:1.6}
+.obs{margin-top:.35rem; font-size:.97rem; line-height:1.55}
+.obs .ret{font-family:var(--font-mono); font-size:.85rem}
+.role{display:inline-block; min-width:5.5rem; font-family:var(--font-mono); font-size:.7rem; letter-spacing:.06em; text-transform:uppercase; color:var(--muted)}
+.tags{display:flex; flex-wrap:wrap; gap:.3rem 1rem; margin-top:.35rem; padding-left:5.5rem; align-items:center}
+.ntag{font-family:var(--font-mono); font-size:.7rem; color:var(--noise); letter-spacing:.02em}
+.ntag:hover{color:var(--ink)}
+.ep-note{font-family:var(--font-mono); font-size:.7rem; color:var(--muted)}
+.meter{display:inline-flex; align-items:center; gap:.45rem; font-family:var(--font-mono); font-size:.7rem; color:var(--muted)}
+.pips{display:inline-flex; gap:2px; vertical-align:middle}
+.pips i{display:block; width:.55rem; height:.55rem; background:var(--pip-off)}
+.pips i.on{background:var(--ink)}
+.ep-end{font-family:var(--font-mono); font-size:.72rem; color:var(--muted); margin-left:.5rem}
+.ep-foot{border-top:1px solid var(--rule); padding:.75rem 1rem; display:flex; flex-wrap:wrap; gap:.3rem 1rem; align-items:baseline; font-size:.9rem}
+.ep-foot .eq{font-family:var(--font-display); font-size:1.1rem}
+@media (max-width:599px){
+  .turns::before{left:calc(1rem + 2.25rem + .3rem)}
+  .turn{grid-template-columns:2.25rem minmax(0,1fr); gap:.4rem .6rem}
+  .turn .t{grid-row:1 / span 2}
+  .turn .chip{justify-self:start}
+  .turn .turn-body{grid-column:2}
+  .tags{padding-left:0}
+}
+
+/* ---------- redline notation ---------- */
+del{color:var(--muted); text-decoration:line-through 1.5px var(--noise); text-decoration-line:line-through; text-decoration-thickness:1.5px; text-decoration-color:var(--noise)}
+ins{color:var(--noise); font-weight:500; text-decoration:none; border-bottom:1px dotted var(--noise)}
+del::before{content:"recorded: "}
+ins::before{content:"observed: "}
+del::before, ins::before{position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap}
+
+/* ---------- definition lists ---------- */
+.pomdp{display:grid; grid-template-columns:4rem minmax(0,1fr); margin:0; border-top:1px solid var(--rule)}
+.pomdp dt, .pomdp dd{border-bottom:1px solid var(--rule); padding-block:.55rem; margin:0; min-width:0}
+.pomdp dt{font-family:var(--font-display); font-style:italic; font-size:1.15rem; line-height:1.4}
+.pomdp dd{font-size:.97rem; line-height:1.55}
+.kv{display:grid; grid-template-columns:minmax(0,11rem) minmax(0,1fr); margin:0; border-top:1px solid var(--rule)}
+.kv dt, .kv dd{border-bottom:1px solid var(--rule); padding-block:.5rem; margin:0; min-width:0}
+.kv dt{font-family:var(--font-mono); font-size:.72rem; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); padding-top:.7rem; padding-right:1rem}
+.kv dd{font-size:.95rem; font-variant-numeric:tabular-nums lining-nums}
+@media (max-width:599px){
+  .kv{grid-template-columns:minmax(0,1fr)}
+  .kv dt{border-bottom:0; padding-bottom:0}
+}
+.pill{font-family:var(--font-mono); font-size:.8rem; border:1px solid var(--rule); border-radius:2px; padding:.05rem .4rem; white-space:nowrap}
+.q{font-family:var(--font-mono); font-size:.85rem}
+
+/* ---------- tables (booktabs) ---------- */
+.tbl > figcaption{font-size:.88rem; line-height:1.5; color:var(--muted); margin-bottom:.75rem}
+.tbl > figcaption .figlabel{font-family:var(--font-mono); font-size:.75rem; letter-spacing:.08em; margin-right:.5rem}
+.tbl > figcaption strong{color:var(--ink)}
+.table-scroll{overflow-x:auto; -webkit-overflow-scrolling:touch}
+.bt{
+  border-collapse:collapse; width:100%; border-top:2px solid var(--ink); border-bottom:1px solid var(--ink);
+  font-size:.9rem; line-height:1.35; font-variant-numeric:tabular-nums lining-nums;
+}
+.bt.w44{min-width:44rem}
+.bt th, .bt td{padding:.5rem .6rem; text-align:right; border-bottom:1px solid var(--rule); white-space:nowrap; font-weight:400; vertical-align:baseline}
+.bt tbody:last-child tr:last-child > *{border-bottom:0}
+.bt th[scope="row"], .bt thead tr:first-child th:first-child, .bt .l{text-align:left}
+.bt th[scope="row"], .bt thead tr:first-child th:first-child{position:sticky; left:0; background:var(--bg); z-index:1}
+.bt thead th{font-weight:500; border-bottom:0}
+.bt thead tr.groups th{padding-top:.6rem; padding-bottom:.35rem;
+  background-image:linear-gradient(var(--rule-strong),var(--rule-strong)); background-repeat:no-repeat; background-size:calc(100% - .8rem) 1px; background-position:center bottom}
+.bt thead tr.groups th:first-child{background-image:none}
+.bt thead tr.metrics th{font-family:var(--font-mono); font-size:.72rem; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); background-color:var(--surface-2); border-bottom:1px solid var(--rule-strong)}
+.bt thead tr.metrics th.ood, .bt thead tr.groups th.ood{background-color:var(--accent-wash)}
+.bt thead tr.metrics:first-child th:first-child{background-color:var(--surface-2)}
+.bt thead tr.metrics th.nocase{text-transform:none; font-family:var(--font-display); font-style:italic; font-size:.95rem; letter-spacing:0}
+.ood-tag{font-family:var(--font-mono); font-size:.65rem; letter-spacing:.08em; border:1px solid var(--accent); color:var(--accent); padding:0 .3rem; border-radius:2px; margin-left:.35rem; vertical-align:.1em}
+.bt tr.grp th{
+  text-align:left; font-family:var(--font-mono); font-size:.72rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);
+  font-weight:500; padding-top:.95rem; padding-bottom:.3rem; position:static; background:transparent;
+}
+.bt tr.grp th span{position:sticky; left:.6rem}
+.bt tr.ours > *{background:var(--accent-wash)}
+.bt tr.ours th[scope="row"]{color:var(--accent); background:var(--accent-wash); font-weight:600}
+.bt u{text-decoration-thickness:1.5px; text-underline-offset:3px}
+.bt sup{font-size:.7em; margin-left:1px; font-weight:400}
+.bt tr.ref > *{font-style:italic; color:var(--muted); border-bottom:1.5px solid var(--ink)}
+.bt td.mono, .bt th.mono{font-family:var(--font-mono); font-size:.82rem}
+.bt td[data-wrap]{white-space:normal; min-width:14rem; line-height:1.5}
+.bt .tfoot-note{font-size:.82rem; color:var(--muted); white-space:normal; text-align:left; padding-top:.6rem}
+.bt.tiers th, .bt.tiers td{white-space:normal; vertical-align:top; text-align:left}
+.bt.tiers th[scope="row"]{white-space:nowrap}
+@media (max-width:599px){
+  .bt th[scope="row"]{white-space:normal; width:9rem; min-width:6.5rem}
+  .bt thead tr:first-child th:first-child{white-space:normal}
+}
+.bt.tiers .merged{color:var(--muted); font-size:.85rem; border-left:1px solid var(--rule); border-right:1px solid var(--rule)}
+
+/* ---------- noise ledger ---------- */
+.legend{font-size:.9rem; color:var(--muted)}
+.ledger{display:grid; gap:2rem 2.5rem; align-items:start}
+.ledger > *{min-width:0}
+@media (min-width:960px){ .ledger{grid-template-columns:minmax(0,7fr) minmax(0,5fr)} }
+.ledger table{border-collapse:collapse; width:100%; border-bottom:1px solid var(--ink)}
+.ledger caption{caption-side:top; text-align:left; background:var(--noise-wash); color:var(--ink); padding:.5rem .7rem; border-top:2px solid var(--ink)}
+.ledger caption .cat{font-family:var(--font-display); font-weight:600; font-size:1.1rem}
+.ledger caption .rate{font-family:var(--font-mono); font-size:.8rem; color:var(--noise); margin-left:.6rem; white-space:nowrap}
+.ledger th, .ledger td{text-align:left; vertical-align:top; padding:.65rem .7rem; border-bottom:1px solid var(--rule)}
+.ledger tr:last-child > *{border-bottom:0}
+.ledger th{font-weight:600; font-size:.95rem; width:45%}
+.ledger th .desc{display:block; font-weight:400; font-size:.86rem; color:var(--muted); line-height:1.45; margin-top:.15rem}
+.ledger td{font-size:.95rem; line-height:1.55}
+.ledger tr{scroll-margin-top:2rem}
+.ledger tr:target > *{background:var(--noise-wash)}
+@media (max-width:479px){
+  .ledger th, .ledger td{display:block; width:auto}
+  .ledger th{border-bottom:0; padding-bottom:.2rem}
+  .ledger td{padding-top:.2rem}
+}
+
+/* ---------- reward ---------- */
+.equation{font-family:var(--font-display); font-size:1.35rem; text-align:center; padding-block:1.1rem; border-top:1px solid var(--rule); border-bottom:1px solid var(--rule); overflow-x:auto}
+.equation i{font-style:italic}
+.equation sub{font-family:var(--font-mono); font-size:.7em; font-style:normal}
+.weights{font-family:var(--font-mono); font-size:.85rem; color:var(--muted)}
+.terms{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%,13rem),1fr)); gap:1.25rem 2rem}
+.terms > *{min-width:0; border-top:1px solid var(--rule-strong); padding-top:.6rem}
+.terms h3{font-family:var(--font-mono); font-size:.85rem; font-weight:500; letter-spacing:.02em}
+.terms h3 sub{font-size:.75em}
+.terms p{font-size:.93rem; line-height:1.55; margin-top:.3rem}
+
+/* ---------- Calgary-Cambridge strip ---------- */
+.cc{list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%,10rem),1fr)); border-top:2px solid var(--ink); border-bottom:1px solid var(--ink)}
+.cc li{padding:.7rem .8rem .8rem 0; min-width:0; border-bottom:1px solid var(--rule)}
+.cc .n{display:block; font-family:var(--font-mono); font-size:.75rem; color:var(--muted)}
+.cc .s{font-weight:600; font-size:.95rem; line-height:1.35}
+.cc .loop{display:block; margin-top:.3rem; font-family:var(--font-mono); font-size:.7rem; color:var(--muted)}
+@media (min-width:960px){
+  .cc{grid-template-columns:repeat(5, minmax(0,1fr))}
+  .cc li{border-bottom:0; padding-left:.8rem}
+  .cc li + li{border-left:1px solid var(--rule)}
+  .cc li:first-child{padding-left:0}
+}
+
+/* ---------- stats ---------- */
+.stats{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%,14rem),1fr)); gap:1.5rem 2rem}
+.stats > *{min-width:0; border-top:1px solid var(--rule); padding-top:.7rem}
+.stat-n{font-family:var(--font-display); font-weight:500; font-size:2.4rem; line-height:1.1; font-variant-numeric:lining-nums tabular-nums; display:block}
+.stats p{font-size:.92rem; color:var(--muted); line-height:1.5; margin-top:.35rem}
+.src{display:inline-block; margin-top:.4rem; font-family:var(--font-mono); font-size:.7rem; letter-spacing:.06em; text-transform:uppercase; color:var(--muted)}
+
+/* ---------- limitations ---------- */
+.limits{padding-left:1.1rem; margin:0}
+.limits li + li{margin-top:.75rem}
+.limits strong{font-weight:600}
+
+/* ---------- bibtex ---------- */
+.bib{border:1px solid var(--rule); border-radius:3px}
+.bib-bar{display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:.5rem 1rem; background:var(--surface-2); border-bottom:1px solid var(--rule); padding:.5rem .6rem .5rem 1rem}
+.bib-bar .kicker{color:var(--muted)}
+.bib-actions{display:flex; align-items:center; gap:.75rem; flex-wrap:wrap}
+.copy{min-height:40px; border-color:var(--accent); color:var(--accent); background:var(--surface)}
+button.btn.copy:hover{background:var(--accent); color:var(--on-accent); border-color:var(--accent)}
+.status{font-family:var(--font-mono); font-size:.75rem; color:var(--muted)}
+#bibtex{margin:0; background:var(--surface); padding:1rem; font-family:var(--font-mono); font-size:.82rem; line-height:1.55; overflow-x:auto; white-space:pre; color:var(--ink)}
+
+/* ---------- footer ---------- */
+footer{border-top:1px solid var(--ink); margin-top:1rem; padding-top:1.5rem; display:grid; gap:1.5rem; font-size:.85rem; line-height:1.55; color:var(--muted)}
+footer > *{min-width:0}
+footer p + p{margin-top:.55rem}
+footer .fm{font-family:var(--font-mono); font-size:.75rem; letter-spacing:.08em; text-transform:uppercase; color:var(--ink)}
+footer a{color:var(--muted); overflow-wrap:anywhere}
+footer a:hover{color:var(--accent)}
+</style>
+</head>
+<body>
+<script>
+/* Early theme guard: runs before the markup so a saved choice paints without a light flash.
+   It records any data-theme the host set, so "Auto" can restore it. */
+(function () {
+  var root = document.documentElement;
+  var saved = null;
+  root.setAttribute("data-host-theme", root.getAttribute("data-theme") || "");
+  try { saved = window.localStorage.getItem("medexagent-theme"); } catch (e) { saved = null; }
+  if (saved === "light" || saved === "dark") { root.setAttribute("data-theme", saved); }
+})();
+</script>
+
+<a class="skip" href="#main">Skip to content</a>
+<div class="page">
+
+<nav class="topbar" aria-label="Site header">
+  <a class="wordmark" href="#top">MedExAgent</a>
+  <div class="topnav">
+    <div class="theme" role="group" aria-label="Color theme">
+      <button type="button" data-theme-set="auto" aria-pressed="true">Auto</button>
+      <button type="button" data-theme-set="light" aria-pressed="false">Light</button>
+      <button type="button" data-theme-set="dark" aria-pressed="false">Dark</button>
+    </div>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="hero-main">
+    <p class="venue">
+      <span>NeurIPS 2026 · Main Track · Poster</span>
+    </p>
+    <h1><span class="name">MedExAgent</span><span class="vh">: </span><span class="subtitle">Training LLM Agents to Ask, Examine, and Diagnose in Noisy Clinical Environments</span></h1>
+    <p class="authors"><span>Yicheng Gao<sup>1</sup></span>, <span>Xiaolin Zhou<sup>2</sup></span>, <span>Yahan Li<sup>1</sup></span>, <span>Yue Zhao<sup>1</sup></span>, <span>Ruishan Liu<sup>1</sup></span></p>
+    <p class="affil"><sup>1</sup>University of Southern California · <sup>2</sup>Arizona State University</p>
+    <div class="tldr">
+      <span class="label">TL;DR</span>
+      <p>We model interactive diagnosis as a POMDP over questioning, exam ordering, and diagnosis with noisy observations and exam costs, then train an 8B MedExAgent via SFT+DAPO to match 70B baselines on OOD diagnostic accuracy.</p>
+    </div>
+    <ul class="buttons" aria-label="Links">
+      <li><a class="btn primary" href="https://openreview.net/forum?id=olngQeJA7J" target="_blank" rel="noopener">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 1.5h6l3 3v10h-9z"/><path d="M9.5 1.5v3h3"/><path d="M5.5 8h5M5.5 10.5h5M5.5 5.5h2"/></svg>Paper</a></li>
+      <li><a class="btn" href="static/MedExAgent_NeurIPS2026.pdf" target="_blank" rel="noopener">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 1.5h6l3 3v10h-9z"/><path d="M9.5 1.5v3h3"/><path d="M2 8.5h8.5v4H2z"/></svg>PDF</a></li>
+      <li><a class="btn" href="https://arxiv.org/abs/2605.07058" target="_blank" rel="noopener">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 1.5h6l3 3v10h-9z"/><path d="M9.5 1.5v3h3"/><path d="M5.5 8.5l2.5 3 2.5-3"/></svg>arXiv</a></li>
+      <li><a class="btn" href="https://github.com/EndlessCG/medexagent" target="_blank" rel="noopener">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" aria-hidden="true"><path d="M5.5 2.5c-1.4 0-1.9.6-1.9 1.9v1.8c0 .9-.5 1.5-1.4 1.8.9.3 1.4.9 1.4 1.8v1.8c0 1.3.5 1.9 1.9 1.9"/><path d="M10.5 2.5c1.4 0 1.9.6 1.9 1.9v1.8c0 .9.5 1.5 1.4 1.8-.9.3-1.4.9-1.4 1.8v1.8c0 1.3-.5 1.9-1.9 1.9"/></svg>Code</a></li>
+      <li><a class="btn" href="https://huggingface.co/medagent/MedExAgent-8B" target="_blank" rel="noopener">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><path d="M8 1.5l5.5 3v7L8 14.5l-5.5-3v-7z"/><path d="M2.5 4.5L8 7.5l5.5-3M8 7.5v7"/></svg>Model</a></li>
+      <li><a class="btn" href="https://huggingface.co/datasets/medagent/MedExAgent-Data" target="_blank" rel="noopener">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="2" y="2.5" width="12" height="11"/><path d="M2 6h12M2 9.75h12M6.5 6v7.5"/></svg>Data</a></li>
+      <li><a class="btn" href="#cite">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9.5h3.5v4H3zM3 9.5c0-3 .8-5 3-6"/><path d="M9.5 9.5H13v4H9.5zM9.5 9.5c0-3 .8-5 3-6"/></svg>BibTeX</a></li>
+    </ul>
+  </div>
+</header>
+
+<main id="main">
+
+<div class="disclaimer" role="note" aria-label="Disclaimer">
+  <span class="kicker">Disclaimer</span>
+  <p>MedExAgent is a research prototype. It must not be used for medical advice or patient care.</p>
+</div>
+
+<figure class="fig-teaser">
+  <div class="plate"><a href="static/images/teaser.png" target="_blank" rel="noopener"><img src="static/images/teaser.png" width="2400" height="801" loading="eager" alt="Left: for a patient reporting exhaustion and low mood, a conversation-only LLM asks about sleep and appetite and diagnoses depression, while MedExAgent orders a TSH and free T4 test as a tool call and diagnoses hypothyroidism. Right: scatter plot of diagnosis Jaccard score (Jac) against model size on a log scale, where MedExAgent-8B sits above the baseline size trend, near Aloe-Beta-70B and above the other baselines."></a></div>
+  <figcaption class="cap"><span class="figlabel">FIG. 1</span><strong>MedExAgent overview.</strong> (a) Tool-augmented diagnostic reasoning enables correct diagnoses where conversation-only baselines fail. (b) On the OOD test set AgentClinic-MedQA, our 8B agent matches much larger baselines on Jac. <a class="fullsize" href="static/images/teaser.png" target="_blank" rel="noopener">Open full-size figure</a></figcaption>
+</figure>
+
+<section class="sec" id="method" aria-labelledby="env-h">
+  <h2 id="env-h">Environment and training</h2>
+  <p>One episode mixes three kinds of action: the agent asks the patient questions, orders exams as tool calls, and ends the episode with a diagnosis. We formalize this as a POMDP in which noise enters through the observation function. MedExAgent starts from Meditron3-8B. It is first fine-tuned on synthetic doctor–patient conversations that follow the five-stage Calgary–Cambridge interview model, then trained with DAPO in the environment on a composite reward <i>R</i> = <i>R</i><sub>dx</sub> + 0.5·<i>R</i><sub>tool</sub> − 0.1·<i>R</i><sub>cost</sub>, which scores diagnostic accuracy, tool-call quality, and the financial cost and patient discomfort of unnecessary exams. Training uses DDxPlus and PMC-Patients-v2; AgentClinic-MedQA is held out as an out-of-distribution test set.</p>
+
+  <figure class="episode wide" aria-labelledby="ep-cap">
+    <figcaption class="ep-head" id="ep-cap">
+      <span class="kicker">Sample conversation</span>
+    </figcaption>
+    <ol class="turns">
+      <li class="turn">
+        <span class="t">t=1</span>
+        <span class="chip"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 2h9v6h-5l-2.5 2.2V8h-1.5z"/></svg>Ask</span>
+        <div class="turn-body">
+          <p class="act"><span class="role">Assistant</span>“What brings you in today?”</p>
+          <p class="obs"><span class="role">User</span>“I feel exhausted, low mood …”</p>
+        </div>
+      </li>
+      <li class="turn">
+        <span class="t">t=2</span>
+        <span class="chip"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 2h9v6h-5l-2.5 2.2V8h-1.5z"/></svg>Ask</span>
+        <div class="turn-body">
+          <p class="act"><span class="role">Assistant</span>“How long have you felt this way?”</p>
+          <p class="obs"><span class="role">User</span>“About <del>3 weeks</del> <ins>1 week</ins>.”</p>
+          <p class="tags"><a class="ntag" href="#noise-temporal">patient noise · Temporal Change</a></p>
+        </div>
+      </li>
+      <li class="turn">
+        <span class="t">t=3</span>
+        <span class="chip"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 2h9v6h-5l-2.5 2.2V8h-1.5z"/></svg>Ask</span>
+        <div class="turn-body">
+          <p class="act"><span class="role">Assistant</span>“Have you noticed any other changes?”</p>
+          <p class="obs"><span class="role">User</span><ins>“I'm not really sure about that.”</ins></p>
+          <p class="tags"><a class="ntag" href="#noise-vague">patient noise · Vague Answer</a></p>
+        </div>
+      </li>
+      <li class="turn">
+        <span class="t">t=4</span>
+        <span class="chip"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 2.5L1.5 6l3 3.5M7.5 2.5l3 3.5-3 3.5"/></svg>Exam</span>
+        <div class="turn-body">
+          <p class="act"><span class="role">Assistant</span><code>&lt;tool_call&gt;{"name": "hormone_level", "arguments": {"hormone": "tsh"}}&lt;/tool_call&gt;</code></p>
+          <p class="obs"><span class="role">Tool</span>The tsh level results: <ins>Findings are equivocal — </ins>elevated TSH<ins>. Cannot definitively rule out alternative interpretation.</ins></p>
+          <p class="tags"><a class="ntag" href="#noise-ambiguity">exam noise · Ambiguity</a>
+            <span class="meter"><span class="pips" role="img" aria-label="tier 2 of 3"><i class="on"></i><i class="on"></i><i></i></span>cost tier 2</span>
+            <span class="meter"><span class="pips" role="img" aria-label="tier 1 of 3"><i class="on"></i><i></i><i></i></span>discomfort tier 1</span></p>
+        </div>
+      </li>
+      <li class="turn">
+        <span class="t">t=5</span>
+        <span class="chip"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 2.5L1.5 6l3 3.5M7.5 2.5l3 3.5-3 3.5"/></svg>Exam</span>
+        <div class="turn-body">
+          <p class="act"><span class="role">Assistant</span><code>&lt;tool_call&gt;{"name": "xray", "arguments": {"region": "chest"}}&lt;/tool_call&gt;</code></p>
+          <p class="obs"><span class="role">Tool</span><span class="ret">“No significant findings.”</span></p>
+          <p class="tags"><span class="meter"><span class="pips" role="img" aria-label="tier 1 of 3"><i class="on"></i><i></i><i></i></span>cost tier 1</span>
+            <span class="meter"><span class="pips" role="img" aria-label="tier 1 of 3"><i class="on"></i><i></i><i></i></span>discomfort tier 1</span></p>
+        </div>
+      </li>
+      <li class="turn">
+        <span class="t">t=6</span>
+        <span class="chip dx"><svg viewBox="0 0 12 12" aria-hidden="true"><rect x="2" y="2" width="8" height="8" fill="currentColor"/></svg>Dx</span>
+        <div class="turn-body">
+          <p class="act"><span class="role">Assistant</span><code>[DIAGNOSIS: Hypothyroidism]</code><span class="ep-end">The episode ends.</span></p>
+        </div>
+      </li>
+    </ol>
+  </figure>
+
+  <figure class="wide fig-pipeline">
+    <div class="plate"><a href="static/images/pipeline.png" target="_blank" rel="noopener"><img src="static/images/pipeline.png" width="2400" height="1246" loading="lazy" alt="Method diagram. Top left: a POMDP in which a latent disease d generates noisy observations from the agent's actions (ask, order exams, final diagnosis). Top right: a finetuning pipeline from base model to SFT to RL with DAPO. Bottom: five Calgary-Cambridge conversation stages, with patient noise shown as 'Pain in my kidney' changed to 'stomach' and exam noise shown as 'High' changed to 'Normal' white cell counts."></a></div>
+    <figcaption class="cap"><span class="figlabel">FIG. 2</span><strong>Method overview.</strong> Top left: The interactive diagnosis POMDP, with latent disease <i>d</i> generating noisy observations ω<sub>t</sub> from agent actions a<sub>t</sub>. Top right: Two-stage finetuning (SFT then DAPO RL). Bottom: Doctor–patient conversations follow the five-stage Calgary–Cambridge model, with patient and exam noise injected at rates p<sub>conv</sub> and p<sub>exam</sub>. <a class="fullsize" href="static/images/pipeline.png" target="_blank" rel="noopener">Open full-size figure</a></figcaption>
+  </figure>
+
+</section>
+
+<section class="sec" id="noise" aria-labelledby="noise-h">
+  <h2 id="noise-h">Noise model</h2>
+  <p>Patient responses are perturbed with probability p<sub>conv</sub> = 0.3 and exam results with p<sub>exam</sub> = 0.1, using seven patient noise types and three exam noise types drawn from error classifications in medical research. Noise is injected during both SFT data generation and RL rollouts.</p>
+  <p class="legend">Struck text is the recorded value. Red text with a dotted underline is what the agent observes.</p>
+
+  <div class="ledger wide">
+    <table>
+      <caption><span class="cat">Patient noise</span><span class="rate">p<sub>conv</sub> = 0.3</span></caption>
+      <tbody>
+        <tr id="noise-p-bodypart"><th scope="row">Body Part Swap<span class="desc">Reports symptom location as an adjacent body part.</span></th><td>“<del>stomach</del> <ins>liver</ins> pain”</td></tr>
+        <tr id="noise-confusion"><th scope="row">Symptom Confusion<span class="desc">Confuses a symptom descriptor with a related but incorrect term.</span></th><td>“<del>burning</del> <ins>tingling</ins> sensation”</td></tr>
+        <tr id="noise-severity"><th scope="row">Severity Change<span class="desc">Misreports the intensity of symptoms, typically downplaying.</span></th><td>“<del>severe</del> <ins>moderate</ins> headache”</td></tr>
+        <tr id="noise-temporal"><th scope="row">Temporal Change<span class="desc">Misreports symptom duration or onset time.</span></th><td>“<del>3 weeks</del> <ins>1 week</ins>”</td></tr>
+        <tr id="noise-p-omission"><th scope="row">Omission<span class="desc">Fails to mention one symptom from a multi-symptom presentation.</span></th><td>fever, cough, <del>fatigue</del></td></tr>
+        <tr id="noise-selfdx"><th scope="row">Self-Diagnosis<span class="desc">Volunteers an incorrect self-diagnosis based on lay sources.</span></th><td><ins>“I looked it up online and it seems like allergies.”</ins></td></tr>
+        <tr id="noise-vague"><th scope="row">Vague Answer<span class="desc">Gives evasive, non-specific responses to direct questions.</span></th><td><ins>“I'm not really sure about that.”</ins></td></tr>
+      </tbody>
+    </table>
+    <table>
+      <caption><span class="cat">Exam noise</span><span class="rate">p<sub>exam</sub> = 0.1</span></caption>
+      <tbody>
+        <tr id="noise-e-bodypart"><th scope="row">Body Part Swap<span class="desc">Replaces an anatomical location in findings with an adjacent body part.</span></th><td>“Inflammation in the <del>stomach</del> <ins>liver</ins> lining”</td></tr>
+        <tr id="noise-e-omission"><th scope="row">Omission<span class="desc">Drops one clause from multi-part findings.</span></th><td>“Elevated WBC; <del>low hemoglobin;</del> normal platelets”</td></tr>
+        <tr id="noise-ambiguity"><th scope="row">Ambiguity<span class="desc">Wraps findings in equivocal language indicating limited certainty.</span></th><td>“<ins>Findings are equivocal — </ins>nodule in right lung<ins>. Cannot definitively rule out alternative interpretation.</ins>”</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</section>
+
+<section class="sec" id="results" aria-labelledby="results-h">
+  <h2 id="results-h">Main results</h2>
+  <p>As an in-distribution sanity check, MedExAgent-8B significantly outperforms every baseline on DDxPlus and PMC-Patients-v2 (p &lt; 0.001 on all metrics). On the held-out AgentClinic-MedQA benchmark, MedExAgent-8B is statistically tied with the 70B Aloe-Beta on Sim, Jac, and Acc.</p>
+  <p>It also ties Qwen3-32B on strict accuracy (p = 0.857) and outperforms the remaining five baselines on Jac. At 8B parameters, MedExAgent matches the strongest medical specialist in the comparison at roughly 9× smaller parameter count. Significance is tested with a paired percentile bootstrap (B = 10,000) on the same split.</p>
+
+  <figure class="tbl wide">
+    <figcaption id="t1-cap"><span class="figlabel">TABLE 1</span>Diagnostic performance across three benchmarks. <strong>Sim</strong> is cosine similarity between embeddings of the predicted and ground-truth diagnoses; <strong>Jac</strong> is the LLM-judge Jaccard similarity (matched concepts divided by the union of predicted and ground-truth concepts); <strong>Acc</strong> is LLM-judge strict accuracy (1 if every ground-truth concept was matched, 0 otherwise). <strong>Bold</strong> marks the best result per column, <u>underline</u> marks the second best. Superscripts denote paired-bootstrap significance of MedExAgent-8B vs. the runner-up on Sim (B=10,000; *p&lt;0.05, **p&lt;0.01, ***p&lt;0.001; no marker = not significant at p&lt;0.05).</figcaption>
+    <div class="table-scroll" role="region" tabindex="0" aria-label="Table 1, scrollable">
+      <table class="bt w44" aria-label="Table 1: Diagnostic performance across three benchmarks" aria-describedby="t1-cap">
+        <colgroup><col></colgroup><colgroup span="3"></colgroup><colgroup span="3"></colgroup><colgroup span="3"></colgroup>
+        <thead>
+          <tr class="groups"><th scope="col" rowspan="2">Model</th><th scope="colgroup" colspan="3">DDXPlus</th><th scope="colgroup" colspan="3">PMC-Patients</th><th scope="colgroup" colspan="3" class="ood">AgentClinic<span class="ood-tag">OOD</span></th></tr>
+          <tr class="metrics"><th scope="col">Sim</th><th scope="col">Jac</th><th scope="col">Acc</th><th scope="col">Sim</th><th scope="col">Jac</th><th scope="col">Acc</th><th scope="col" class="ood">Sim</th><th scope="col" class="ood">Jac</th><th scope="col" class="ood">Acc</th></tr>
+        </thead>
+        <tbody>
+          <tr class="grp"><th colspan="10" scope="rowgroup"><span>General open-source</span></th></tr>
+          <tr><th scope="row">Llama-3.1-8B-Instruct</th><td>0.640</td><td>0.383</td><td>0.605</td><td>0.507</td><td>0.122</td><td>0.157</td><td>0.575</td><td>0.225</td><td>0.298</td></tr>
+          <tr><th scope="row">Qwen3-8B</th><td>0.605</td><td>0.328</td><td>0.460</td><td>0.532</td><td>0.092</td><td>0.120</td><td>0.565</td><td>0.153</td><td>0.219</td></tr>
+          <tr><th scope="row">Qwen3-14B</th><td>0.659</td><td>0.399</td><td>0.538</td><td>0.565</td><td>0.113</td><td>0.143</td><td>0.614</td><td>0.226</td><td>0.284</td></tr>
+          <tr><th scope="row">Qwen3-32B</th><td>0.685</td><td>0.466</td><td>0.626</td><td>0.551</td><td>0.127</td><td>0.157</td><td>0.637</td><td>0.310</td><td>0.368</td></tr>
+          </tbody>
+          <tbody>
+          <tr class="grp"><th colspan="10" scope="rowgroup"><span>Medical open-source</span></th></tr>
+          <tr><th scope="row">MedGemma-27B-text-it</th><td>0.498</td><td>0.241</td><td>0.325</td><td>0.469</td><td>0.108</td><td>0.123</td><td>0.544</td><td>0.214</td><td>0.249</td></tr>
+          <tr><th scope="row">Aloe-Beta-70B</th><td><u>0.716</u></td><td>0.503</td><td>0.670</td><td><u>0.590</u></td><td>0.171</td><td>0.219</td><td><strong>0.684</strong></td><td><strong>0.395</strong></td><td><strong>0.395</strong></td></tr>
+          <tr><th scope="row">HuatuoGPT-o1-70B</th><td>0.664</td><td>0.410</td><td>0.470</td><td>0.534</td><td>0.120</td><td>0.124</td><td>0.625</td><td>0.238</td><td>0.249</td></tr>
+          </tbody>
+          <tbody>
+          <tr class="grp"><th colspan="10" scope="rowgroup"><span>Ours</span></th></tr>
+          <tr class="ours"><th scope="row">MedExAgent-8B (Ours)</th><td><strong>0.953</strong><sup>***</sup></td><td><strong>0.937</strong><sup>***</sup></td><td><strong>0.939</strong><sup>***</sup></td><td><strong>0.626</strong><sup>***</sup></td><td><strong>0.345</strong><sup>***</sup></td><td><strong>0.314</strong><sup>***</sup></td><td><u>0.672</u></td><td><u>0.378</u></td><td><u>0.378</u></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </figure>
+</section>
+
+<section class="sec" id="cost" aria-labelledby="cost-h">
+  <h2 id="cost-h">Exam cost</h2>
+  <p>The reward charges each unnecessary exam for its financial cost and patient discomfort. On PMC-Patients-v2, MedExAgent orders 4.03 exams per case, close to the 3.46 exams in the recorded ground-truth workup.</p>
+  <div class="stats wide">
+    <div><span class="stat-n">1.11×</span><p>Aggregate cost relative to the recorded ground-truth workup on PMC-Patients-v2.</p><span class="src">Paper, appendix cost table</span></div>
+    <div><span class="stat-n">40.4</span><p>Cost per correct diagnosis, the lowest among all baselines. The next lowest is Aloe-Beta-70B at 65.8.</p><span class="src">Paper, appendix cost table</span></div>
+    <div><span class="stat-n">2.6×</span><p>Increase in aggregate exam cost when the cost penalty is removed (12.68 to 32.35), since the model also orders more expensive exams.</p><span class="src">Ablation, paper Table 3</span></div>
+  </div>
+
+</section>
+
+<section class="sec" id="abstract" aria-labelledby="abstract-h">
+  <h2 id="abstract-h">Abstract</h2>
+  <p>Real-world clinical diagnosis is a complex process in which the doctor is required to obtain information from both interaction with the patient and conducting medical exams. Additionally, the doctor needs to adapt to different patient personas, as well as noisy and incomplete information that can happen at any time during the process. However, existing benchmarks for medical LLMs and methods for automatic diagnosis largely simplify this process by reducing it to single-turn question answering, noise-free conversations, or sequential exam making, etc., ignoring the interactive and uncertain nature of clinical diagnosis. In this paper, we aim to address this gap by formalizing clinical diagnosis as a Partially Observable Markov Decision Process (POMDP) with three action types: questioning the patient, ordering medical exams as tool calls, and issuing a diagnosis. We also introduce a systematic noise model comprising seven patient noise types and three exam noise types.</p>
+  <p>Using our proposed environment, we train an effective diagnosis agent, <strong>MedExAgent</strong>, through a two-stage pipeline that first performs supervised finetuning on synthetic conversations structured after the Calgary-Cambridge model for clinical interviews, and then applies DAPO to optimize a composite reward capturing diagnostic accuracy, tool call quality, and exam cost including financial cost and patient discomfort. Through extensive experiments and ablation studies, we demonstrate that MedExAgent achieves diagnostic performance comparable to larger models while maintaining cost-efficient examination strategies.</p>
+</section>
+
+<section class="sec" id="cite" aria-labelledby="cite-h">
+  <h2 id="cite-h">Citation</h2>
+  <div class="bib wide">
+    <div class="bib-bar">
+      <span class="kicker">BibTeX</span>
+      <span class="bib-actions"><span class="status" id="copy-status" aria-live="polite"></span><button type="button" class="btn copy" id="copy-bib">Copy BibTeX</button></span>
+    </div>
+<pre id="bibtex" tabindex="0" aria-label="BibTeX entry">@inproceedings{gao2026medexagent,
+  title     = {MedExAgent: Training LLM Agents to Ask, Examine, and Diagnose in Noisy Clinical Environments},
+  author    = {Gao, Yicheng and Zhou, Xiaolin and Li, Yahan and Zhao, Yue and Liu, Ruishan},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2026}
+}</pre>
+  </div>
+  <!-- TODO: check the BibTeX against the NeurIPS 2026 proceedings entry once published. -->
+</section>
+
+</main>
+
+<footer>
+  <div>
+    <p class="fm">MedExAgent · NeurIPS 2026</p>
+    <p>This website is licensed under a <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener license">Creative Commons Attribution-ShareAlike 4.0 International License</a>.</p>
+  </div>
+</footer>
+
+</div>
+
+<script>
+(function () {
+  var root = document.documentElement;
+  var KEY = "medexagent-theme";
+  var buttons = document.querySelectorAll("[data-theme-set]");
+
+  var hostTheme = root.getAttribute("data-host-theme") || "";
+
+  function press(value) {
+    for (var i = 0; i < buttons.length; i++) {
+      buttons[i].setAttribute("aria-pressed", String(buttons[i].getAttribute("data-theme-set") === value));
+    }
+  }
+
+  function apply(value) {
+    if (value === "light" || value === "dark") {
+      root.setAttribute("data-theme", value);
+    } else {
+      value = "auto";
+      if (hostTheme) { root.setAttribute("data-theme", hostTheme); }
+      else { root.removeAttribute("data-theme"); }
+    }
+    press(value);
+  }
+
+  var saved = null;
+  try { saved = window.localStorage.getItem(KEY); } catch (e) { saved = null; }
+  if (saved === "light" || saved === "dark") { apply(saved); }
+  else { press("auto"); }
+
+  for (var i = 0; i < buttons.length; i++) {
+    buttons[i].addEventListener("click", function () {
+      var value = this.getAttribute("data-theme-set");
+      apply(value);
+      try {
+        if (value === "auto") { window.localStorage.removeItem(KEY); }
+        else { window.localStorage.setItem(KEY, value); }
+      } catch (e) { /* storage unavailable: the choice lasts for this page view only */ }
+    });
+  }
+
+  var copyBtn = document.getElementById("copy-bib");
+  var pre = document.getElementById("bibtex");
+  var status = document.getElementById("copy-status");
+  var timer = null;
+
+  function selectPre() {
+    var range = document.createRange();
+    range.selectNodeContents(pre);
+    var sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+    status.textContent = "Selected. Press Ctrl+C or Cmd+C.";
+  }
+
+  copyBtn.addEventListener("click", function () {
+    if (timer) { clearTimeout(timer); timer = null; }
+    if (!navigator.clipboard || !navigator.clipboard.writeText) { selectPre(); return; }
+    navigator.clipboard.writeText(pre.textContent).then(function () {
+      status.textContent = "Copied";
+      timer = setTimeout(function () { status.textContent = ""; }, 2000);
+    }, selectPre);
+  });
+})();
+</script>
+</body>
+</html>
