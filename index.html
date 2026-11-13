@@ -381,7 +381,7 @@ del::before, ins::before{position:absolute; width:1px; height:1px; overflow:hidd
 /* ---------- stats ---------- */
 .stats{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%,14rem),1fr)); gap:1.5rem 2rem}
 .stats > *{min-width:0; border-top:1px solid var(--rule); padding-top:.7rem}
-.stat-n{font-family:var(--font-display); font-weight:500; font-size:2.4rem; line-height:1.1; font-variant-numeric:lining-nums tabular-nums; display:block}
+.stat-n{font-family:var(--font-display); font-weight:500; font-size:1.35rem; line-height:1.2; display:block}
 .stats p{font-size:.92rem; color:var(--muted); line-height:1.5; margin-top:.35rem}
 .src{display:inline-block; margin-top:.4rem; font-family:var(--font-mono); font-size:.7rem; letter-spacing:.06em; text-transform:uppercase; color:var(--muted)}
 
@@ -636,9 +636,9 @@ footer a:hover{color:var(--accent)}
   <h2 id="cost-h">Exam cost</h2>
   <p>The reward charges each unnecessary exam for its financial cost and patient discomfort. On PMC-Patients-v2, MedExAgent orders 4.03 exams per case, close to the 3.46 exams in the recorded ground-truth workup.</p>
   <div class="stats wide">
-    <div><span class="stat-n">1.11×</span><p>Aggregate cost relative to the recorded ground-truth workup on PMC-Patients-v2.</p><span class="src">Paper, appendix cost table</span></div>
-    <div><span class="stat-n">40.4</span><p>Cost per correct diagnosis, the lowest among all baselines. The next lowest is Aloe-Beta-70B at 65.8.</p><span class="src">Paper, appendix cost table</span></div>
-    <div><span class="stat-n">2.6×</span><p>Increase in aggregate exam cost when the cost penalty is removed (12.68 to 32.35), since the model also orders more expensive exams.</p><span class="src">Ablation, paper Table 3</span></div>
+    <div><span class="stat-n">Close to the recorded workup</span><p>Aggregate exam cost is 1.11× that of the recorded ground-truth workup on PMC-Patients-v2.</p><span class="src">Paper, appendix cost table</span></div>
+    <div><span class="stat-n">Most cost-efficient</span><p>Lowest cost per correct diagnosis among all baselines (40.4; next lowest Aloe-Beta-70B at 65.8).</p><span class="src">Paper, appendix cost table</span></div>
+    <div><span class="stat-n">Cost penalty needed</span><p>Without it, aggregate exam cost rises 2.6× (12.68 to 32.35), since the model also orders more expensive exams.</p><span class="src">Ablation, paper Table 3</span></div>
   </div>
 
 </section>
