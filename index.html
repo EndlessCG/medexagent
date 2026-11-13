@@ -156,7 +156,7 @@ strong{font-weight:600}
 /* ---------- hero ---------- */
 .hero{padding-block:2.5rem 2.25rem; display:grid; gap:2rem}
 .hero > *{min-width:0}
-.venue{display:flex; flex-wrap:wrap; gap:.25rem 1.25rem; font-size:.95rem; font-weight:500; color:var(--accent)}
+.venue{margin-top:.6rem; font-size:1.05rem; font-weight:600; color:var(--accent)}
 .venue a{color:var(--muted)}
 .venue a:hover{color:var(--accent)}
 h1{margin-top:1rem; font-family:var(--font-display); font-optical-sizing:auto; overflow-wrap:break-word}
@@ -439,12 +439,10 @@ footer a:hover{color:var(--accent)}
 
 <header class="hero" id="top">
   <div class="hero-main">
-    <p class="venue">
-      <span>Accepted to NeurIPS 2026</span>
-    </p>
     <h1><span class="name">MedExAgent</span><span class="vh">: </span><span class="subtitle">Training LLM Agents to Ask, Examine, and Diagnose in Noisy Clinical Environments</span></h1>
     <p class="authors"><span>Yicheng Gao<sup>1</sup></span>, <span>Xiaolin Zhou<sup>2</sup></span>, <span>Yahan Li<sup>1</sup></span>, <span>Yue Zhao<sup>1</sup></span>, <span>Ruishan Liu<sup>1</sup></span></p>
     <p class="affil"><sup>1</sup>University of Southern California · <sup>2</sup>Arizona State University</p>
+    <p class="venue">Accepted to NeurIPS 2026</p>
     <div class="tldr">
       <span class="label">TL;DR</span>
       <p>We model interactive diagnosis as a POMDP over questioning, exam ordering, and diagnosis with noisy observations and exam costs, then train an 8B MedExAgent via SFT+DAPO to match 70B baselines on OOD diagnostic accuracy.</p>
