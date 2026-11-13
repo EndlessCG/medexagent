@@ -101,7 +101,7 @@ strong{font-weight:600}
 
 /* ---------- page wrapper ---------- */
 .page{
-  max-width:72rem; margin-inline:auto;
+  max-width:56rem; margin-inline:auto;
   padding-left:max(16px, env(safe-area-inset-left, 0px));
   padding-right:max(16px, env(safe-area-inset-right, 0px));
   padding-block:1.25rem 3rem;
@@ -129,7 +129,6 @@ strong{font-weight:600}
 /* ---------- section grid ---------- */
 .sec{border-top:1px solid var(--rule); padding-block:2.75rem}
 .sec > *{min-width:0}
-.sec > p, .sec > ul, .sec > ol{max-width:85ch}
 .sec > * + *{margin-top:1.1rem}
 .sec > .wide{margin-top:2rem}
 .sec > .wide + .wide{margin-top:2.5rem}
@@ -622,6 +621,26 @@ footer a:hover{color:var(--accent)}
     <div><span class="stat-n">2.6×</span><p>Increase in aggregate exam cost when the cost penalty is removed (12.68 to 32.35), since the model also orders more expensive exams.</p><span class="src">Ablation, paper Table 3</span></div>
   </div>
 
+</section>
+
+<section class="sec" id="robustness" aria-labelledby="rob-h">
+  <h2 id="rob-h">Held-out noise at test time</h2>
+  <p>To test robustness without leaking the noise types used in training, we use a different noise, false-negative, where the findings of each exam are removed with probability α. The reported false-negative rate is 7.8% for CT and 17.7% for chest X-ray. Performance degrades gradually as α grows, with a Jac drop of at most 0.032 when α ≤ 0.25. The variant trained without noise injection is worse than MedExAgent at every noise level, which suggests that training with noise helps the model avoid over-relying on individual exam results.</p>
+
+  <figure class="tbl wide">
+    <figcaption id="t4-cap"><span class="figlabel">TABLE 4</span>Jac on PMC-Patients-v2 under false-negative noise with rate α.</figcaption>
+    <div class="table-scroll" role="region" tabindex="0" aria-label="Table 4, scrollable">
+      <table class="bt" aria-label="Table 4: Jac under false-negative noise" aria-describedby="t4-cap">
+        <thead>
+          <tr class="metrics"><th scope="col" class="nocase">α</th><th scope="col">0 (clean)</th><th scope="col">0.035</th><th scope="col">0.078</th><th scope="col">0.25</th><th scope="col">0.50</th><th scope="col">1.0</th></tr>
+        </thead>
+        <tbody>
+          <tr class="ours"><th scope="row">MedExAgent-8B</th><td><strong>0.345</strong></td><td><strong>0.334</strong></td><td><strong>0.339</strong></td><td><strong>0.313</strong></td><td><strong>0.271</strong></td><td><strong>0.202</strong></td></tr>
+          <tr><th scope="row">w/o noise injection</th><td>0.269</td><td>0.273</td><td>0.257</td><td>0.236</td><td>0.225</td><td>0.156</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </figure>
 </section>
 
 <section class="sec" id="abstract" aria-labelledby="abstract-h">
