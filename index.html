@@ -201,6 +201,8 @@ figure{margin:0}
 .fullsize{display:none}
 @media (max-width:719px){ .fullsize{display:inline} }
 .fig-teaser{margin-top:2rem}
+.fig-video{margin-top:2rem}
+.fig-video video{display:block; width:100%; height:auto; aspect-ratio:16/9; background:#F5F8F9}
 .fig-chart svg{display:block; width:100%; max-width:36rem; height:auto; margin-inline:auto}
 figcaption.cap{margin-top:.75rem; font-size:.9rem; line-height:1.5; color:var(--muted)}
 .cap .figlabel{font-family:var(--font-mono); font-size:.75rem; letter-spacing:.08em; color:var(--muted); margin-right:.5rem}
@@ -473,6 +475,11 @@ footer a:hover{color:var(--accent)}
   <span class="kicker">Disclaimer</span>
   <p>MedExAgent is a research prototype. It must not be used for medical advice or patient care.</p>
 </div>
+
+<figure class="fig-video" aria-labelledby="video-cap">
+  <div class="plate"><video controls playsinline preload="metadata" width="1920" height="1080" poster="static/videos/medexagent_video_poster.jpg"><source src="static/videos/medexagent_video.mp4" type="video/mp4">Your browser cannot play this video. <a href="static/videos/medexagent_video.mp4">Download the MP4</a>.</video></div>
+  <figcaption class="cap" id="video-cap"><span class="figlabel">VIDEO</span><strong>MedExAgent in under two minutes.</strong> The problem, the simulated clinic and its noise, training, and the main results. <a class="fullsize" href="static/videos/medexagent_video.mp4" target="_blank" rel="noopener">Download MP4</a></figcaption>
+</figure>
 
 <figure class="fig-teaser">
   <div class="plate"><a href="static/images/teaser.png" target="_blank" rel="noopener"><img src="static/images/teaser.png" width="2400" height="801" loading="eager" alt="Left: for a patient reporting exhaustion and low mood, a conversation-only LLM asks about sleep and appetite and diagnoses depression, while MedExAgent orders a TSH and free T4 test as a tool call and diagnoses hypothyroidism. Right: scatter plot of diagnosis Jaccard score (Jac) against model size on a log scale, where MedExAgent-8B sits above the baseline size trend, near Aloe-Beta-70B and above the other baselines."></a></div>
